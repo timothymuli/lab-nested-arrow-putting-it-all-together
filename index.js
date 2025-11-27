@@ -65,18 +65,37 @@ console.log(handleLogin("malaikaJj")); // Login Successful!
 // If we tried again after success (or continued failing):
 const handleLockout = createLoginTracker(userCredentials); // New tracker (Counter starts at 0)
 
-console.log(handleLockout("wrong_pass_1")); // Login Failed. (Attempt 4)
-console.log(handleLockout("wrong_pass_2")); // Account Locked. (Attempt 5)
-console.log(handleLockout("any_pass")); // Lockout Enforced, correct password ignored.
-console.log(handleLockout("malaikaJj")); 
+// Attempt 1 (Count: 1, Remaining: 2)
+console.log("Test 2a:", handleLockout("wrong_pass_1"));
+// Attempt 2 (Count: 2, Remaining: 1)
+console.log("Test 2b:", handleLockout("wrong_pass_2"));
+// Attempt 3 (Count: 3, Remaining: 0 -> Lockout Warning)
+console.log("Test 2c:", handleLockout("wrong_pass_3"));
+// Attempt 4 (Count: 4 -> Lockout Enforced)
+console.log("Test 2d:", handleLockout("any_password")); 
+// Attempt 5 (Count: 5 -> Lockout Enforced, correct password ignored)
+console.log("Test 2e:", handleLockout("malaikaJj"));
 
+//This test proves that the closure creates a unique, private 'attemptCount' for each instance.
+const trackerA = createLoginTracker({ username: 'UserA', password: 'passA' });
+const trackerB = createLoginTracker({ username: 'UserB', password: 'passB' });
 
+// Tracker A fails twice (A's attemptCount = 2)
+console.log("A Status (Fail 1):", trackerA('bad_a_1'));
+console.log("A Status (Fail 2):", trackerB('bad_a_2'));
 
+// Tracker B succeeds (B's attemptCount = 1 -> Reset to 0)
+// This should not affect Tracker A's state.
+console.log("B Status (Success):", trackerB('passB'));
 
+// Tracker A fails its third time and locks itself out (A's attemptCount = 3 -> Locked)
+console.log("A Status (Lockout):", trackerA('bad_a_3'));
 
+// Tracker B should still be working perfectly, confirming independence.
+console.log("B Status (Still Working):", trackerB('passB'));
 
-    
-    
+// --- 3. EXPORT (Required for the module system) ---
+
   module.exports = {
   ...(typeof createLoginTracker !== 'undefined' && { createLoginTracker })
 };
