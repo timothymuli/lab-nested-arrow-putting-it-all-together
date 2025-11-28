@@ -11,6 +11,7 @@
  * @returns {function(string): string} The inner function to handle a login attempt.
  */
 function createLoginTracker(userInfo) {
+
   // Define maximum attempts as a constant.
   const MAX_ATTEMPTS = 3;
 
@@ -20,30 +21,31 @@ function createLoginTracker(userInfo) {
   // Define and return an Inner Arrow Function (The Closure)
   return (passwordAttempt) => {
 
-    // Increment the attemptCount for every call
-    attemptCount++;
-
-    // Check for Lockout
-    // This check must happen first to enforce the lock even after a failure
-    if (attemptCount > MAX_ATTEMPTS) {
-      return `Account Locked due to too many failed login attempts. (Attempts: ${attemptCount})`;
+    // Lockout Check Priority
+    // The very first check must be if the account is already locked
+    // based on previous failures (attemptCount >= MAX_ATTEMPTS).
+    if (attemptCount >= MAX_ATTEMPTS) {
+      return `Account locked due to too many failed login attempts`;
     }
 
     // Check for Successful Login
     if (passwordAttempt === userInfo.password) {
        // Reset attemptCount here for the next session if the user logs in successfully
-       attemptCount = 0;
-       return `Login Successful! Welcome, ${userInfo.username}. (Attempts: 1)`;
+       attemptCount = 0; // Reset the counter
+       return `Login successful`;
     }
 
     // Login Failed (If we haven't hit the lockout limit yet)
-    const remainingAttempts = MAX_ATTEMPTS - attemptCount;
+    // Increment the count ONLY on a failed attempt.
+    attemptCount++;
 
-    if (remainingAttempts === 0) {
-      return `Login Failed. This was your last attempt. Account is now locked.`;
-    } else {
-      return `Login Failed. Please try again. Remaining attempts: ${remainingAttempts}`;
-    }
+    // Check if this failure caused a new lockout.
+  
+      return `Attempt ${attemptCount}: Login failed`;
+    
+
+    
+   
   };
 }
 
@@ -58,8 +60,8 @@ const userCredentials = {
 const handleLogin = createLoginTracker(userCredentials);
 
 // 2. Test attempts
-console.log(handleLogin("wrongPassword")); // Login Failed. Remaining attempts: 2
-console.log(handleLogin("anotherWrong")); // Login Failed. Remaining attempts: 1
+console.log(handleLogin("wrongPassword")); // Attempt 1: Login Failed
+console.log(handleLogin("anotherWrong")); // Attempt 2: Login Failed
 console.log(handleLogin("malaikaJj")); // Login Successful!
 
 // If we tried again after success (or continued failing):
